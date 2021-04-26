@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <?!= include('mainCSS'); ?>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  </head>
+
+  <body>
+    <div class="container " id="mainmenu">
+      <div class="listForConsolidation" id="listForConsolidationId"> </div>
+      <div class="bootMenuConsolidation">
+        <center>
+          <input type="button" value="Add spreadsheet" onclick="loadPicker()" /><!--addSpreadsheet()-->
+          <input type="button" value="Clear list" onclick="$('#listForConsolidationId').html('')" />
+        </center>
+      </div>
+      <div class="resultConsolidation">
+        <center>
+          <input type="button" value="Consolidate sheets" onclick="consolidate()" />
+        </center>
+      </div>
+
+    </div>
+    
+    <div class="container unuse" id="resultmenu">
+        <div class ="resultTop" id="result">
+          <div class ="result" id="resultTop"> </div>
+        </div>
+        <div class="buttonResult"><input type="button" value="Start over" onclick="startOver()" /></div>
+    </div>
+
+    <?!= include('mainJS'); ?> 
+    <script type="text/javascript" src="https://apis.google.com/js/api.js"></script>
+    <script>
+        google.script.run.withSuccessHandler(showMainList).withUserObject(this).getMainSpreadsheet();
+    </script> 
+  </body>
+
+</html>
