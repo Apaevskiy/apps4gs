@@ -1,0 +1,99 @@
+<script>
+  function loadPicker(){
+    google.script.run.getPickerForm();
+      (async () => {
+        let receiver = new Promise((res, rej) => {
+          window.modalDone = res;
+        });
+        var message = await receiver;
+        google.script.run.withSuccessHandler(showPrepList).getListSpreadsheet(message);
+      })();
+  }
+
+  function consolidate(){
+    $("li").addClass("block");
+    $("span").addClass("block");
+    $("input").attr('disabled','disabled');
+    
+    
+    let arrayChecked = [];
+    $('li.addNewSpreadsheet.checked').each(function() {
+      arrayChecked.push({
+        nameSheet: $(this).children().html(),
+        idFile: $(this).parent().attr('id')
+      });
+    });
+    google.script.run.withSuccessHandler(showResult).consolidation(arrayChecked);
+  }
+  function showResult(result){
+    $("input").removeAttr('disabled');
+    $("li").removeClass("block");
+    $("span").removeClass("block");
+
+    $('.container').addClass("unuse");
+    $('#resultmenu').removeClass("unuse");
+    
+    $('#resultTop').append('<p>'+result.numberOfSheets +  ' sheets have been combined an put in ');
+    $('#resultTop').append('<a id="hrefConsolidated" href="'+result.url+'"  target="_blank" >Consolidated sheet</a><p>');// attr("href",result.url);
+  }
+  function startOver(){
+    $('.container').addClass("unuse");
+    $('#mainmenu').removeClass("unuse");
+  }
+
+  function generateUl(spreadsheet) {
+    let str = '<div class="spreadsheet"><span class="nameUl">';
+    str += spreadsheet.nameSpreadsheet + '</span>\n<ul id="' + spreadsheet.id + '">\n';
+    for (let j = 0; j < spreadsheet.listOfNameSheet.length; j++) {
+      str += '<li class="addNewSpreadsheet"><span>' + spreadsheet.listOfNameSheet[j] + '</span></li>';
+    }
+    str += '\n</ul>\n</div>';
+    return str;
+  }
+
+  function showMainList(spreadsheet) {
+    
+    $('#listForConsolidationId').append(generateUl(spreadsheet));
+  }
+
+  function showPrepList(listOfSpreadsheet) {
+    let str = "";
+    for (let i = 0; i < listOfSpreadsheet.length; i++) {
+      let spreadsheet = listOfSpreadsheet[i];
+      str += generateUl(spreadsheet);
+    }
+    $('#listForConsolidationId').append(str);
+  }
+
+
+  $(".listForConsolidation").on("click", "div.spreadsheet > span", function() {
+    var container = $(this).parent();
+    if (container.hasClass('clicked')) {
+      container.removeClass('clicked');
+    } else {
+      container.addClass("clicked");
+    }
+  });
+  $(".listForConsolidation").on("click", "li.addNewSpreadsheet", function() {
+    var li = $(this);
+    if (li.hasClass('checked')) {
+      li.removeClass('checked');
+    } else {
+      li.addClass("checked");
+    }
+  });
+
+  function check() {
+    const arrayChecked = [];
+    $('li.addNewSpreadsheet.checked').each(function() {
+      let item = {
+        nameSheet: $(this).children().html(),
+        idSpreadsheet: $(this).parent().attr('id'),
+        nameSpreadsheet: $(this).parent().parent().text().split('\n')[0]
+      };
+      arrayChecked.push(item);
+    });
+    return arrayChecked;
+  }
+
+</script>
