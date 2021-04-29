@@ -9,10 +9,13 @@
 
   <body>
     <div class="container " id="mainmenu">
+      <p>
+        <h3>Sheets:</h3>
+      </p>
       <div class="listForConsolidation" id="listForConsolidationId"> </div>
       <div class="bootMenuConsolidation">
         <center>
-          <input type="button" value="Add spreadsheet" onclick="loadPicker()" /><!--addSpreadsheet()-->
+          <input type="button" value="Add spreadsheet" onclick="loadPicker()" />
           <input type="button" value="Clear list" onclick="$('#listForConsolidationId').html('')" />
         </center>
       </div>
@@ -21,21 +24,25 @@
           <input type="button" value="Consolidate sheets" onclick="consolidate()" />
         </center>
       </div>
-
+      <div class="progressBar unwork" id="myProgress">
+        <div class="lineInProgressBar" id="myBar">0%</div>
+        <div class="lineInProgressBar" id="myBarOfOneSheet">0%</div>
+      </div>
     </div>
-    
+
     <div class="container unuse" id="resultmenu">
-        <div class ="resultTop" id="result">
-          <div class ="result" id="resultTop"> </div>
-        </div>
-        <div class="buttonResult"><input type="button" value="Start over" onclick="startOver()" /></div>
+      <div class="resultTop" id="result">
+        <div class="result" id="resultTop"> </div>
+      </div>
+      <div class="buttonResult"><input type="button" value="Start over" onclick="startOver()" /></div>
     </div>
 
-    <?!= include('mainJS'); ?> 
+    <?!= include('mainJS'); ?>
     <script type="text/javascript" src="https://apis.google.com/js/api.js"></script>
     <script>
-        google.script.run.withSuccessHandler(showMainList).withUserObject(this).getMainSpreadsheet();
-    </script> 
+      google.script.run.withSuccessHandler(showMainList).withUserObject(this).getMainSpreadsheet();
+
+    </script>
   </body>
 
 </html>
