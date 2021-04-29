@@ -1,8 +1,3 @@
-function getOAuthToken() {
-  DriveApp.getRootFolder();
-  return ScriptApp.getOAuthToken();
-}
-
 function getMainSpreadsheet(){
   return getSpreadsheet(SpreadsheetApp.getActiveSpreadsheet());
 }
