@@ -1,78 +1,54 @@
-  <script type="text/javascript">
-    var DIALOG_DIMENSIONS = {
-        width: 800,
-        height: 600
-    };
-    var pickerApiLoaded = false;
+<script type="text/javascript">
 
-    function onApiLoad() {
-        gapi.load('picker', {
-            'callback': function() {
-                pickerApiLoaded = true;
-            }
-        });
-        google.script.run.withSuccessHandler(createPicker)
-            .withFailureHandler(showError).getOAuthToken();
-    }
-    function createPicker(token) {
-        if (pickerApiLoaded && token) {
-            var docsView = new google.picker.DocsView()
-                .setIncludeFolders(true)
-                .setMimeTypes('application/vnd.google-apps.spreadsheet')
-                .setSelectFolderEnabled(true);
+  function onApiLoad() {
+    gapi.load('picker', {
+      'callback': function() {
+        google.script.run.withSuccessHandler(createPicker).getOAuthToken();
+      }
+    });
+  }
 
-            var picker = new google.picker.PickerBuilder()
-                .addView(docsView)
-                .enableFeature(google.picker.Feature.NAV_HIDDEN)
-                .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
-                .hideTitleBar()
-                .setSize(DIALOG_DIMENSIONS.width - 2, DIALOG_DIMENSIONS.height - 2)
-                .setOAuthToken(token)
-                .setCallback(pickerCallback)
-                .setOrigin('https://docs.google.com')
-                .build();
-            picker.setVisible(true);
-        } else {
-            showError('Unable to load the file picker.');
-        }
-    }
+  function createPicker(token) {
+    var docsView = new google.picker.DocsView()
+      .setIncludeFolders(true)
+      .setMimeTypes('application/vnd.google-apps.spreadsheet')
+      .setSelectFolderEnabled(false);
 
-    function pickerCallback(data) {
-        var action = data[google.picker.Response.ACTION];
-        if (action == google.picker.Action.PICKED) {
-          let listId=[];
-          for(let i=0; i< data[google.picker.Response.DOCUMENTS].length; i++)
-          {
-            let doc = data[google.picker.Response.DOCUMENTS][i];
-            listId.push(doc[google.picker.Document.ID]);
-          }
-            (function findSideBar(limit) {
-        let f = window.top.frames;
-        for (let i = 0; i < limit; ++i) {
-          try {
-            if (
-              f[i] /*/iframedAppPanel*/ &&
-              f[i].length &&
-              f[i][0] && //#sandboxFrame
-              f[i][0][0] && //#userHtmlFrame
-              window !== f[i][0][0] //!== self
-            ) {
-              var sidebar = f[i][0][0];
-              sidebar.modalDone(listId);
-              google.script.host.close();
-            }
-          } catch (e) {
-            console.error(e);
-            continue;
-          }
-        }
-      })(10);
-        } else if (action == google.picker.Action.CANCEL) {
+    var picker = new google.picker.PickerBuilder()
+      .addView(docsView)
+      .enableFeature(google.picker.Feature.NAV_HIDDEN)
+      .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
+      .hideTitleBar()
+      .setSize(800 - 2, 600 - 2)
+      .setOAuthToken(token)
+      .setCallback(pickerCallback)
+      .setOrigin('https://docs.google.com')
+      .build();
+    picker.setVisible(true);
+  }
+
+  function pickerCallback(data) {
+    var action = data[google.picker.Response.ACTION];
+    if (action == google.picker.Action.PICKED) {
+      let listId = [];
+      for (let i = 0; i < data[google.picker.Response.DOCUMENTS].length; i++) {
+        let doc = data[google.picker.Response.DOCUMENTS][i];
+        listId.push(doc[google.picker.Document.ID]);
+      }
+      let f = window.top.frames;
+      for (let i = 0; i < 10; ++i) {
+        try {
+          if (window !== f[i][0][0]) {
+            var sidebar = f[i][0][0];
+            sidebar.modalDone(listId);
             google.script.host.close();
+          }
+        } catch (e) {
+          continue;
         }
+      }
+    } else if (action == google.picker.Action.CANCEL) {
+      google.script.host.close();
     }
-
-    function showError(message) {
-        document.getElementById('result').innerHTML = 'Error: ' + message;
-    }
-</script>
+  }
+  </script>
