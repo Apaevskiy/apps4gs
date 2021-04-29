@@ -1,99 +1,131 @@
 <script>
-  function loadPicker(){
+  function loadPicker() {
     google.script.run.getPickerForm();
-      (async () => {
-        let receiver = new Promise((res, rej) => {
-          window.modalDone = res;
-        });
-        var message = await receiver;
-        google.script.run.withSuccessHandler(showPrepList).getListSpreadsheet(message);
-      })();
+    (async () => {
+      let receiver = new Promise((res, rej) => {
+        window.modalDone = res;
+      });
+      let message = await receiver;
+      google.script.run.withSuccessHandler(showPrepList).getListSpreadsheet(message);
+    })();
   }
 
-  function consolidate(){
-    $("li").addClass("block");
-    $("span").addClass("block");
-    $("input").attr('disabled','disabled');
-    
-    
+  function consolidate() {
     let arrayChecked = [];
     $('li.addNewSpreadsheet.checked').each(function() {
       arrayChecked.push({
-        nameSheet: $(this).children().html(),
+        nameSheet: $(this).children().text(),
         idFile: $(this).parent().attr('id')
       });
     });
-    google.script.run.withSuccessHandler(showResult).consolidation(arrayChecked);
+    if (arrayChecked.length == 0) {
+      alert('Выберите хотя бы один лист');
+    } else {
+      $("li").addClass("block");
+      $("span").addClass("block");
+      $("input").attr('disabled', 'disabled');
+      google.script.run.withSuccessHandler(showResult).consolidation(arrayChecked);
+      google.script.run.withSuccessHandler(renderProgressBar).getDataForProgressBar();
+    }
   }
-  function showResult(result){
+
+  function renderProgressBar(bufferItem) {
+    $('#myProgress').removeClass("unwork");
+    let elem = document.getElementById("myBar");
+    let elemPercent = document.getElementById("myBarOfOneSheet");
+    let number = 0,
+      sheetsLength = 1,
+      percent = 0;
+
+    if (bufferItem.percentWork != null && bufferItem.sheet != null) {
+      number = bufferItem.sheet.number;
+      sheetsLength = bufferItem.sheet.lengthConsolidation;
+      percent = bufferItem.percentWork.percent;
+
+      let width = number / sheetsLength * 100;
+      elem.style.width = width + "%";
+      elem.innerHTML = number + '/' + sheetsLength;
+
+      elemPercent.style.width = percent + "%";
+      elemPercent.innerHTML = percent + "%";
+    } else if (bufferItem.percentWork != null && bufferItem.sheet == null) {
+      percent = bufferItem.percentWork.percent;
+      elemPercent.style.width = percent + "%";
+      elemPercent.innerHTML = percent + "%";
+    } else if (bufferItem.percentWork == null && bufferItem.sheet != null) {
+      number = bufferItem.sheet.number,
+        sheetsLength = bufferItem.sheet.lengthConsolidation;
+      let width = number / sheetsLength * 100;
+      elem.style.width = width + "%";
+      elem.innerHTML = number + '/' + sheetsLength;
+    }
+    if (Number(number) < Number(sheetsLength)) {
+      google.script.run.withSuccessHandler(renderProgressBar).getDataForProgressBar();
+    }
+  }
+
+  function showResult(result) {
     $("input").removeAttr('disabled');
     $("li").removeClass("block");
     $("span").removeClass("block");
 
     $('.container').addClass("unuse");
     $('#resultmenu').removeClass("unuse");
-    
-    $('#resultTop').append('<p>'+result.numberOfSheets +  ' sheets have been combined an put in ');
-    $('#resultTop').append('<a id="hrefConsolidated" href="'+result.url+'"  target="_blank" >Consolidated sheet</a><p>');// attr("href",result.url);
+
+    let p = document.createElement('p');
+    p.innerHTML = result.numberOfSheets + ' sheets have been combined an put in ';
+    let link = document.createElement('a');
+    link.href = result.url;
+    link.innerHTML = 'Consolidated sheet';
+    link.setAttribute('target', '_blank');
+    p.append(link);
+    $('#resultTop').html('');
+    $('#resultTop').append(p);
   }
-  function startOver(){
+
+  function startOver() {
     $('.container').addClass("unuse");
     $('#mainmenu').removeClass("unuse");
+    $('#myProgress').addClass("unwork");
   }
 
   function generateUl(spreadsheet) {
-    let str = '<div class="spreadsheet"><span class="nameUl">';
-    str += spreadsheet.nameSpreadsheet + '</span>\n<ul id="' + spreadsheet.id + '">\n';
+    let div = document.createElement('div');
+    div.className = 'spreadsheet';
+
+    let nameSpreadsheet = document.createElement('span');
+    nameSpreadsheet.className = 'nameUl';
+    nameSpreadsheet.innerHTML = spreadsheet.nameSpreadsheet;
+    div.append(nameSpreadsheet);
+
+    let ul = document.createElement('ul');
+    ul.id = spreadsheet.id;
+
     for (let j = 0; j < spreadsheet.listOfNameSheet.length; j++) {
-      str += '<li class="addNewSpreadsheet"><span>' + spreadsheet.listOfNameSheet[j] + '</span></li>';
+      let li = document.createElement('li');
+      li.className = 'addNewSpreadsheet';
+      li.innerHTML = '<span>' + spreadsheet.listOfNameSheet[j] + '</span>';
+      ul.append(li);
     }
-    str += '\n</ul>\n</div>';
-    return str;
+    div.append(ul);
+    return div;
   }
 
   function showMainList(spreadsheet) {
-    
     $('#listForConsolidationId').append(generateUl(spreadsheet));
   }
 
   function showPrepList(listOfSpreadsheet) {
-    let str = "";
-    for (let i = 0; i < listOfSpreadsheet.length; i++) {
-      let spreadsheet = listOfSpreadsheet[i];
-      str += generateUl(spreadsheet);
+    for (let spreadsheet of listOfSpreadsheet) {
+      $('#listForConsolidationId').append(generateUl(spreadsheet));
     }
-    $('#listForConsolidationId').append(str);
   }
-
-
-  $(".listForConsolidation").on("click", "div.spreadsheet > span", function() {
-    var container = $(this).parent();
-    if (container.hasClass('clicked')) {
-      container.removeClass('clicked');
-    } else {
-      container.addClass("clicked");
-    }
-  });
   $(".listForConsolidation").on("click", "li.addNewSpreadsheet", function() {
-    var li = $(this);
+    let li = $(this);
     if (li.hasClass('checked')) {
       li.removeClass('checked');
     } else {
       li.addClass("checked");
     }
   });
-
-  function check() {
-    const arrayChecked = [];
-    $('li.addNewSpreadsheet.checked').each(function() {
-      let item = {
-        nameSheet: $(this).children().html(),
-        idSpreadsheet: $(this).parent().attr('id'),
-        nameSpreadsheet: $(this).parent().parent().text().split('\n')[0]
-      };
-      arrayChecked.push(item);
-    });
-    return arrayChecked;
-  }
-
 </script>
